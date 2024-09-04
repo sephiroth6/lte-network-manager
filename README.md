@@ -20,6 +20,7 @@
   - `udhcpc`
   - `iptables`
 
+
 You can install these dependencies using your package manager. For example, on Debian-based systems:
 
 ```bash
@@ -27,13 +28,24 @@ sudo apt-get install qmi-utils busybox iptables
 ```
 
 ## Installation
+1. Open the configuration file in a text editor:
 
-   ```bash
-   git clone https://github.com/sephiroth6/lte-network-manager
-   cd lte-net-manager
-   chmod +x lte-net-manager.sh
-   sudo ln -s $(pwd)/lte-net-manager.sh /usr/local/bin/lte-net-manager
-   ```
+```bash
+git clone https://github.com/sephiroth6/lte-network-manager
+cd lte-net-manager
+chmod +x lte-net-manager.sh
+sudo ln -s $(pwd)/lte-net-manager.sh /usr/local/bin/lte-net-manager
+```
+
+- **Configuration**: You need to configure the Access Point Name (APN):
+1. Open the configuration file in a text editor:
+```bash
+sudo nano /etc/qmi-network.conf
+```
+2. Add or modify the APN settings. For example:
+```bash
+APN="your-apn-here"
+```
 
 ## Usage
 
