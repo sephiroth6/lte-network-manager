@@ -24,20 +24,35 @@ NO_FWD=false      # Variable to control the --no-fwd option
 
 # Function to display help
 help() {
-    echo "Usage: $0 {start|stop|debug|restart|--no-fwd|--help}"
+    echo "Usage: $0 [--no-fwd] [--help] {start|stop|debug|restart}"
     echo
     echo "Commands:"
     echo "  start          Start the LTE network connection."
     echo "  stop           Stop the LTE network connection."
     echo "  debug          Start the service in debug mode with verbose output."
     echo "  restart        Restart the LTE network connection."
-    echo "  --no-fwd       Skip the application of iptables rules for forwarding."
-    echo "  --help         Display this help message and exit."
     echo
     echo "Options:"
     echo "  --no-fwd       Skip setting up iptables rules for NAT and forwarding."
-    echo "  debug          Enable debug mode for more detailed logs."
+    echo "  --help         Display this help message and exit."
 }
+
+# Parse global options
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --no-fwd)
+        NO_FWD=true
+        shift
+        ;;
+        --help)
+        help
+        exit 0
+        ;;
+        *)
+        break
+        ;;
+    esac
+done
 
 # Check if the script is run as root
 if [ "$EUID" -ne 0 ]; then
@@ -184,24 +199,7 @@ restart() {
     start
 }
 
-# Parse arguments
-for arg in "$@"; do
-    case $arg in
-        --no-fwd)
-        NO_FWD=true
-        shift # Remove --no-fwd from the parameters
-        ;;
-        --help)
-        help
-        exit 0
-        ;;
-        debug)
-        DEBUG_MODE=true
-        ;;
-    esac
-done
-
-# Main
+# Main argument handling
 case "$1" in
     start)
         start
@@ -216,7 +214,7 @@ case "$1" in
         restart
         ;;
     *)
-        echo "Usage: $0 {start|stop|debug|restart|--no-fwd|--help}"
+        echo "Usage: $0 [--no-fwd] [--help] {start|stop|debug|restart}"
         exit 1
         ;;
 esac
