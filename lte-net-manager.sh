@@ -19,6 +19,8 @@
 DEVICE="/dev/cdc-wdm0"
 PIDFILE='/tmp/lte-network.pid'
 LOGFILE="/var/log/lte-network.log"
+CONN_LOGFILE="/tmp/checkconn.log" # Aggiungi qui il log di connettività
+
 DEBUG_MODE=false  # Variable to control debug mode
 NO_FWD=false      # Variable to control the --no-fwd option
 
@@ -31,6 +33,8 @@ help() {
     echo "  stop           Stop the LTE network connection."
     echo "  debug          Start the service in debug mode with verbose output."
     echo "  restart        Restart the LTE network connection."
+    echo "  check          Check network connection."
+
     echo
     echo "Options:"
     echo "  --no-fwd       Skip setting up iptables rules for NAT and forwarding."
@@ -72,12 +76,27 @@ log() {
     fi
 }
 
+# Funzione di log
+log2() {
+    local message="$1"
+    local timestamp
+    timestamp=$(date +'%Y-%m-%d %H:%M:%S')
+    if [ "$DEBUG_MODE" = true ]; then
+        echo "$timestamp - $message" | tee -a "$LOGFILE"
+    else
+        echo "$timestamp - $message" >> "$LOGFILE"
+    fi
+}
+
+
+
 start() {
     log "Starting LTE network connection..."
     
     # Clean up existing connections
     log "Cleaning up existing connections..."
     qmi-network "$DEVICE" stop 2>/dev/null
+    rm -f "${PIDFILE}"
 
     # Bring down network interfaces if they exist
     [ -d /sys/class/net/wwan0 ] && ip link set wwan0 down
@@ -184,6 +203,21 @@ stop() {
     ip link set wwan0 down
 }
 
+# Funzione per il controllo della connettività
+check_connectivity() {
+    if ping -c 3 1.1.1.1 > /dev/null; then
+        log2 "Connettività OK"
+        echo "Connettività OK"
+    else
+        log2 "Errore: Connettività persa. Riavvio della connessione LTE..."
+        echo "$(date +'%Y-%m-%d %H:%M:%S') - Connettività persa, eseguo stop e start della connessione." >> "$CONN_LOGFILE"
+        echo "Errore: Connettività persa. Riavvio della connessione LTE..."
+        echo "$(date +'%Y-%m-%d %H:%M:%S') - Connettività persa, eseguo stop e start della connessione."
+        stop
+        start
+    fi
+}
+
 debug() {
     DEBUG_MODE=true  # Enable debug mode
     log "Running in debug mode..."
@@ -213,6 +247,9 @@ case "$1" in
     restart)
         restart
         ;;
+    check)
+    	check_connectivity
+	    ;;
     *)
         echo "Usage: $0 [--no-fwd] [--help] {start|stop|debug|restart}"
         exit 1
